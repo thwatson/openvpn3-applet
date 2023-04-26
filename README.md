@@ -3,6 +3,7 @@ GTK3 Applet for openvpn3 in Python
 
 ## Dependancies
 * Icons require [network-manager-applet](https://gitlab.gnome.org/GNOME/network-manager-applet)
+* Notifications require [libnotify](https://gitlab.gnome.org/GNOME/libnotify)
 * [openvpn-applet](openvpn-applet) depends on [vpn-manage](vpn-manage/vpn-manage)
 
 ## Configure & Install
