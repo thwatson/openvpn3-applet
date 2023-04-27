@@ -83,7 +83,7 @@ class Indicator():
         notifySessionStop.show()
         
     def kill(self, source):
-        sessionsKill = os.popen("sudo kill -9 $(ps aux | grep openvpn3-servic | awk '{print $2}')")
+        sessionsKill = os.popen("sudo kill -9 $(ps aux | grep openvpn3-service | awk '{print $2}')")
         noitfySessionsKill = notify.Notification.new(sessionsKill)
         notifySessionsKill.set_urgency(1)
         notifySessionsKill.show()
@@ -95,6 +95,7 @@ class Indicator():
         notifySessionsList.show()
 
     def quit(self, source):
+        self.disconnect(None)
         gtk.main_quit()
 
 Indicator()

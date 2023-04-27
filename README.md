@@ -1,9 +1,10 @@
 # openvpn3-applet
 GTK3 Applet for openvpn3 in Python
 
-## Dependancies
+## Dependencies
 * [openvpn3-linux](https://github.com/OpenVPN/openvpn3-linux)
 * Notifications require [libnotify](https://gitlab.gnome.org/GNOME/libnotify)
+* The killswitch feature uses `sudo`
 
 ## Configure
 1. Set `OVPN_CONFIG` with path to .ovpn config file.
