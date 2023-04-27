@@ -3,17 +3,18 @@ GTK3 Applet for openvpn3 in Python
 
 ## Dependancies
 * [openvpn3-linux](https://github.com/OpenVPN/openvpn3-linux)
-* Icons require [network-manager-applet](https://gitlab.gnome.org/GNOME/network-manager-applet)
 * Notifications require [libnotify](https://gitlab.gnome.org/GNOME/libnotify)
-* [openvpn-applet](openvpn-applet) depends on [vpn-manage](vpn-manage/vpn-manage)
 
-## Configure & Install
+## Configure
+1. Set `OVPN_CONFIG` with path to .ovpn config file.
+2. See [Icons](#Icons), if necessary.
+3. Install in `$PATH` or just run `$ ./openvpn3-applet`
 
-### openvpn3-applet
-1. Install [vpn-manage](vpn-manage/README.md)
-2. Install to `$PATH` or `$ ./openvpn-applet`
-
-### openvpn3-applet-standalone
-
-1. Edit `OVPN_CONFIG="/path/to/config.ovpn"`
-2. Install to `$PATH` or `$ ./openvpn-applet-standalone`
+## Icons
+Icons are configured:
+```
+ICON_PATH = os.path.dirname(os.fspath("/usr/share/icons/hicolor/scalable/apps/"))
+CONNECTED_ICON = "/nm-vpn-active-lock-symbolic.svg"
+DISCONNECTED_ICON = "/nm-vpn-connecting01-symbolic.svg"
+```
+This config works for Arch Linux with [network-manager-applet](https://gitlab.gnome.org/GNOME/network-manager-applet) installed. If icons don't work, locate where your distribution installs them, or re-configure to use whatever icons you wish.
