@@ -38,33 +38,33 @@ class Indicator():
         # check if a session is active using `openvpn3 sessions-list`
         session_list = os.popen("openvpn3 sessions-list").read()
         if "Status: Connection, Client connected" in session_list:
-            self.indicator.set_icon(ICON_PATH+CONNECTED_ICON)
+            self.indicator.set_icon_full(ICON_PATH+CONNECTED_ICON, "Connected")
         else:
-            self.indicator.set_icon(ICON_PATH+DISCONNECTED_ICON)
+            self.indicator.set_icon_full(ICON_PATH+DISCONNECTED_ICON, "Disconnected")
         # schedule the next update in 5 seconds
         GLib.timeout_add_seconds(5, self.update_icon)
 
     def build_menu(self):
         menu = gtk.Menu()
 
-        command_one = gtk.MenuItem('Connect')    
+        command_one = gtk.MenuItem(label='Connect')    
         command_one.connect('activate', self.connect) 
         menu.append(command_one)                 
                                                  
-        command_two = gtk.MenuItem('Disconnect') 
+        command_two = gtk.MenuItem(label='Disconnect') 
         command_two.connect('activate', self.disconnect)
         menu.append(command_two)                 
                                                  
-        command_three = gtk.MenuItem('Kill Switch')
+        command_three = gtk.MenuItem(label='Kill Switch')
         command_three.connect('activate', self.kill)
         menu.append(command_three)
 
-        command_four = gtk.MenuItem('Current Sessions')
+        command_four = gtk.MenuItem(label='Current Sessions')
         command_four.connect('activate', self.list)
         menu.append(command_four)
         
-        exittray = gtk.MenuItem('Exit Tray')                    
-        exittray.connect('activate', self.quit)                      
+        exittray = gtk.MenuItem(label='Exit Tray')
+        exittray.connect('activate', self.quit)
         menu.append(exittray)
 
         menu.show_all()
@@ -95,8 +95,12 @@ class Indicator():
         notifySessionsList.show()
 
     def quit(self, source):
-        self.disconnect(None)
-        gtk.main_quit()
+        session_list = os.popen("openvpn3 sessions-list").read()
+        if "Status: Connection, Client connected" in session_list:
+            self.disconnect(None)
+            gtk.main_quit()
+        else:
+            gtk.main_quit()
 
 Indicator()
 signal.signal(signal.SIGINT, signal.SIG_DFL)
