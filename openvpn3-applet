@@ -39,10 +39,11 @@ class Indicator():
         session_list = os.popen("openvpn3 sessions-list").read()
         if "Status: Connection, Client connected" in session_list:
             self.indicator.set_icon_full(ICON_PATH+CONNECTED_ICON, "Connected")
+            # schedule the next update in 5 seconds
+            GLib.timeout_add_seconds(5, self.update_icon)
         else:
             self.indicator.set_icon_full(ICON_PATH+DISCONNECTED_ICON, "Disconnected")
-        # schedule the next update in 5 seconds
-        GLib.timeout_add_seconds(5, self.update_icon)
+        return False
 
     def build_menu(self):
         menu = gtk.Menu()
@@ -71,11 +72,34 @@ class Indicator():
         return menu
 
     def connect(self, source):
+        # check if a session is already active
+        session_list = os.popen("openvpn3 sessions-list").read()
+        if "Status: Connection, Client connected" in session_list:
+            notifyActiveSession = notify.Notification.new("A session is already active.")
+            notifyActiveSession.set_urgency(1)
+            notifyActiveSession.show()
+            return
+        
+        # initiate a new session
         sessionStart = os.popen("openvpn3 session-start --config {0}".format(OVPN_CONFIG)).read()
         notifySessionStart = notify.Notification.new(sessionStart)
         notifySessionStart.set_urgency(1)
         notifySessionStart.show()
-        
+
+        # monitor the session start
+        for _ in range(6):  # try 6 times
+            time.sleep(5)   # spaced five seconds apart
+            session_list = os.popen("openvpn3 sessions-list").read()
+            if "Status: Connection, Client connected" in session_list:
+                self.update_icon()
+                return True
+            elif "No sessions available" in session_list:
+                self.indicator.set_icon_full(ICON_PATH+DISCONNECTED_ICON, "Disconnected")
+                notifySessionError = notify.Notification.new("Connection failed.")
+                notifySessionError.set_urgency(1)
+                notifySessionError.show()
+                return False
+
     def disconnect(self, source):
         sessionStop = os.popen("openvpn3 session-manage --disconnect --config {0}".format(OVPN_CONFIG)).read()
         notifySessionStop = notify.Notification.new(sessionStop)
@@ -84,7 +108,7 @@ class Indicator():
         
     def kill(self, source):
         sessionsKill = os.popen("sudo kill -9 $(ps aux | grep openvpn3-service | awk '{print $2}')")
-        noitfySessionsKill = notify.Notification.new(sessionsKill)
+        notifySessionsKill = notify.Notification.new(sessionsKill)
         notifySessionsKill.set_urgency(1)
         notifySessionsKill.show()
         
