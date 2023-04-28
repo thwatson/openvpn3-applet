@@ -22,7 +22,7 @@ APPINDICATOR_ID = 'openvpn3-applet'
 ICON_PATH = os.path.dirname(os.fspath("/usr/share/icons/hicolor/scalable/apps/"))
 CONNECTED_ICON = "/nm-vpn-active-lock-symbolic.svg"
 DISCONNECTED_ICON = "/nm-vpn-connecting01-symbolic.svg"
-OVPN_CONFIG = ""
+OVPN_CONFIG = os.environ.get('OVPN_CONFIG')
 
 class Indicator():
     def __init__(self):

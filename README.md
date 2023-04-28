@@ -7,7 +7,7 @@ GTK3 Applet for openvpn3 in Python
 * The killswitch feature uses `sudo`
 
 ## Configure
-1. Set `OVPN_CONFIG` with path to .ovpn config file.
+1. Set `OVPN_CONFIG` in your env with path to .ovpn config file or hardcode it in the script like `OVPN_CONFIG = "/path/config.ovpn"`
 2. See [Icons](#Icons), if necessary.
 3. Install in `$PATH` or just run `$ ./openvpn3-applet`
 
