@@ -4,7 +4,6 @@ import gi
 import os
 import signal
 import time
-import subprocess
 
 gi.require_versions({
     'Gtk': '3.0',
@@ -110,7 +109,7 @@ class Indicator():
     def kill(self, source):
         self.disconnect(source)
         sessionsKill = os.popen("sudo kill -9 $(ps aux | grep openvpn3-service* | awk '{print $2}')")
-        notifySessionsKill = notify.Notification.new(sessionsKill)
+        notifySessionsKill = notify.Notification.new("All openvpn-service processes killed.")
         notifySessionsKill.set_urgency(1)
         notifySessionsKill.show()
         
