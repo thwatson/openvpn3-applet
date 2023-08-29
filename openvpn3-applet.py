@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import gi
 import os
 import signal
@@ -19,15 +17,14 @@ from gi.repository import Notify as notify
 from gi.repository import GLib
 
 APPINDICATOR_ID = 'openvpn3-applet'
-ICON_PATH = os.path.dirname(os.fspath("/usr/share/icons/hicolor/scalable/apps/"))
-CONNECTED_ICON = "/nm-vpn-active-lock-symbolic.svg"
-DISCONNECTED_ICON = "/nm-vpn-connecting01-symbolic.svg"
+CONNECTED_ICON = os.path.abspath("icons/connected.ico")
+DISCONNECTED_ICON = os.path.abspath("icons/disconnected.ico")
 OVPN_CONFIG = os.environ.get('OVPN_CONFIG')
 
 class Indicator():
     def __init__(self):
         self.indicator = appindicator.Indicator.new(APPINDICATOR_ID, \
-                ICON_PATH+DISCONNECTED_ICON, \
+                DISCONNECTED_ICON, \
                 appindicator.IndicatorCategory.APPLICATION_STATUS)
         self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
         self.indicator.set_menu(self.build_menu())
@@ -38,12 +35,12 @@ class Indicator():
         # check if a session is active using `openvpn3 sessions-list`
         session_list = os.popen("openvpn3 sessions-list").read()
         if "Status: Connection, Client connected" in session_list:
-            self.indicator.set_icon_full(ICON_PATH+CONNECTED_ICON, "Connected")
+            self.indicator.set_icon_full(CONNECTED_ICON, "Connected")
             # schedule the next update in 5 seconds
             GLib.timeout_add_seconds(5, self.update_icon)
         else:
-            self.indicator.set_icon_full(ICON_PATH+DISCONNECTED_ICON, "Disconnected")
-        return False
+            self.indicator.set_icon_full(DISCONNECTED_ICON, "Disconnected")
+        return
 
     def build_menu(self):
         menu = gtk.Menu()
@@ -72,42 +69,68 @@ class Indicator():
         return menu
 
     def connect(self, source):
-        # check if a session is already active
-        session_list = os.popen("openvpn3 sessions-list").read()
-        if "Status: Connection, Client connected" in session_list:
+        
+        # check if a session is already active and return "connected"
+        def check_connect():
+            session_list = os.popen("openvpn3 sessions-list").read()
+            if "Status: Connection, Client connected" in session_list:
+                connected = True
+            else:
+                connected = False
+            return connected
+        
+        # initiate a new session function
+        def connection_start():
+            sessionStart = os.popen("openvpn3 session-start --config {0}".format(OVPN_CONFIG)).read()
+            notifySessionStart = notify.Notification.new(sessionStart)
+            notifySessionStart.set_urgency(1)
+            notifySessionStart.show()
+            monitor_start()
+                
+        # monitor the session start function
+        def monitor_start():
+            time.sleep(2)
+            i = 1
+            while i < 6:
+                connect_check = check_connect()
+                if connect_check == True:
+                    notifySessionConnected = notify.Notification.new("Connected")
+                    notifySessionConnected.set_urgency(1)
+                    notifySessionConnected.show()
+                    self.update_icon()
+                    return
+                elif connect_check == False:
+                    notifySessionConnecting = notify.Notification.new("Connecting...")
+                    notifySessionConnecting.set_urgency(1)
+                    notifySessionConnecting.show()
+                    time.sleep(3)
+                    i += 1
+
+            notifySessionError = notify.Notification.new("Connection failed.")
+            notifySessionError.set_urgency(1)
+            notifySessionError.show()
+            self.update_icon()
+            return
+
+        # Run checks and connect
+        connect_check = check_connect()
+
+        if connect_check == True:
             notifyActiveSession = notify.Notification.new("A session is already active.")
             notifyActiveSession.set_urgency(1)
             notifyActiveSession.show()
-            return
-        
-        # initiate a new session
-        sessionStart = os.popen("openvpn3 session-start --config {0}".format(OVPN_CONFIG)).read()
-        notifySessionStart = notify.Notification.new(sessionStart)
-        notifySessionStart.set_urgency(1)
-        notifySessionStart.show()
-
-        # monitor the session start
-        for _ in range(6):  # try 6 times
-            time.sleep(5)   # spaced five seconds apart
-            session_list = os.popen("openvpn3 sessions-list").read()
-            if "Status: Connection, Client connected" in session_list:
-                self.update_icon()
-                return True
-            elif "No sessions available" in session_list:
-                self.indicator.set_icon_full(ICON_PATH+DISCONNECTED_ICON, "Disconnected")
-                notifySessionError = notify.Notification.new("Connection failed.")
-                notifySessionError.set_urgency(1)
-                notifySessionError.show()
-                return False
+        else:
+            connection_start()
 
     def disconnect(self, source):
         sessionStop = os.popen("openvpn3 session-manage --disconnect --config {0}".format(OVPN_CONFIG)).read()
-        notifySessionStop = notify.Notification.new(sessionStop)
+        notifySessionStop = notify.Notification.new("Disconnecting", sessionStop)
         notifySessionStop.set_urgency(1)
         notifySessionStop.show()
+        self.update_icon()
         
     def kill(self, source):
-        self.disconnect(source)
+        self.disconnect(None)
         sessionsKill = os.popen("sudo kill -9 $(ps aux | grep openvpn3-service* | awk '{print $2}')")
         notifySessionsKill = notify.Notification.new("All openvpn-service processes killed.")
         notifySessionsKill.set_urgency(1)
@@ -115,7 +138,7 @@ class Indicator():
         
     def list(self, source):
         sessionsList = os.popen("openvpn3 sessions-list").read()
-        notifySessionsList = notify.Notification.new(sessionsList)
+        notifySessionsList = notify.Notification.new("Sessions list", sessionsList)
         notifySessionsList.set_urgency(1)             
         notifySessionsList.show()
 
