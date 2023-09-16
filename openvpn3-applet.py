@@ -89,9 +89,9 @@ class Indicator():
                 
         # monitor the session start function
         def monitor_start():
-            time.sleep(2)
+            time.sleep(3)
             i = 1
-            while i < 6:
+            while i < 8:
                 connect_check = check_connect()
                 if connect_check == True:
                     notifySessionConnected = notify.Notification.new("Connected")
